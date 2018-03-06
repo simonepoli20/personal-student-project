@@ -1,7 +1,7 @@
 %% importing multiples images in an array
 
 % Specify the folder where the files live.
-myFolder = '/Users/simonepoli/Desktop/Corsi_ERASMUS/Personal student project/sample3';
+myFolder = '/Users/simonepoli/Desktop/Corsi_ERASMUS/Personal student project/sample1';
 
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 if ~isdir(myFolder)
@@ -16,17 +16,7 @@ theFiles = dir(filePattern);
 
 %% Load all the 2D images in a 3D matrix
 
-% Decide the risize of the image
-%If i decide to do this after the load of all the images I recive a warning
-%that say that array3d dimensions are too big (more than 18Mb. How can I manage that?
-
-NUMBEROFROWS = 800;
-[rowsIN, columnsIN, ~] = size(imread(fullfile(myFolder, theFiles(1).name)));
-K = rowsIN/NUMBEROFROWS;  %it helps to keep the proportions when i resize the image
-
-rowsR = NUMBEROFROWS;
-columnsR = columnsIN/K;
-
+%no more need to resize the images
 
 for k = 1 : length(theFiles)
   baseFileName = theFiles(k).name;
@@ -37,14 +27,12 @@ for k = 1 : length(theFiles)
   I = imread(fullFileName);
   Ibw = I(:,:,1);
   
-  % resize the image to allow to store it in the 3D matrix
-  Iresize = imresize(Ibw,[rowsR,columnsR]);
  
   % I use the function cat() to create the 3D matrix(:,:,numberImage)
   if k == 1
-    array3d = Iresize; 
+    array3d = Ibw; 
   else
-    array3d = cat(length(theFiles), array3d, Iresize);
+    array3d = cat(length(theFiles), array3d, Ibw);
   end
   
 end
@@ -53,10 +41,6 @@ fprintf(1, 'Uploading ended\n');
 
 array3d = squeeze(array3d);
 
-% resize the image also on the z-axes
-planesIN = length(theFiles);
-planesR = planesIN/K;
-array3d = imresize3(array3d,[rowsR columnsR planesR]);
 
 %% finding the peeks of the histogram to decide the number of threshold needed
 
