@@ -1,4 +1,5 @@
-%% importing multiples images in an array
+%% importing multiples images in a 3D array
+%WARNING: images must be resized by a factor ~0.3
 
 % Specify the folder where the files live.
 myFolder = '/Users/simonepoli/Desktop/Corsi_ERASMUS/Personal student project/sample1';
@@ -14,33 +15,30 @@ end
 filePattern = fullfile(myFolder, '*.jpg');
 theFiles = dir(filePattern);
 
-%% Load all the 2D images in a 3D matrix
+% Loading all the 2D images in a 3D matrix
+% I'm working with resized images so I don't have anymore the necessity to resize the images
 
-%no more need to resize the images
+L = size( imread(theFiles(1).name) ); %Reading the image and getting the resize
 
-for k = 1 : length(theFiles)
-  baseFileName = theFiles(k).name;
-  fullFileName = fullfile(myFolder, baseFileName);
-  fprintf(1, 'Now reading %s\n', fullFileName);
-  
-  % such as reading it in as an image array with imread()
-  I = imread(fullFileName);
-  Ibw = I(:,:,1);
-  
- 
-  % I use the function cat() to create the 3D matrix(:,:,numberImage)
-  if k == 1
-    array3d = Ibw; 
-  else
-    array3d = cat(length(theFiles), array3d, Ibw);
-  end
-  
+array3d = zeros( L(1) , L(2) , length(theFiles) ); %3D matrix of 0s with the right size
+
+for i=1:length(theFiles)
+    
+    baseFileName = theFiles(i).name;
+    fullFileName = fullfile(myFolder, baseFileName);
+    fprintf(1, 'Now reading %s\n', fullFileName);
+
+    array3d(:,:,i) = rgb2gray( imread(theFiles(i).name) ); 
+
 end
 
 fprintf(1, 'Uploading ended\n');
+clear i L;
 
-array3d = squeeze(array3d);
-
+%%resize the 3D array if needed
+%
+%k = 0.3;
+%array3d = imresize3(array3d,k);
 
 %% finding the peeks of the histogram to decide the number of threshold needed
 
@@ -49,13 +47,15 @@ array3d = squeeze(array3d);
 for i = 1:50 %exclude the big peek before 50
   val(i) = 0;
 end
-[posMax,valMax] = peakfinder(val); 
+
+[posMax,valMax] = findpeaks(val,'MinPeakDist',10,'MinPeakWidth',5);
 numThresh = numel(posMax)-1;
 
+figure(1); plot(pos,val);
 
 %% Image processing (option 1) 
 % in this case I use the function imbinarize() to binarize a 3D volume with
-% a given threshold. Don't allow a double thresholding.
+% a given threshold. 
 
 thresh = multithresh(array3d,numThresh);
 thresh=double(thresh);
@@ -87,8 +87,6 @@ Tr=double(Tr);
 BW = tri >= Tr(2);
 
 
-% BW_old = array3d >= T; %doesn't work. The image visualized with
-% volumeViewer() is not the one expected. Don't know why
 %comparing the 2 images obtained in the attempt 1 and 2, only a few voxels
 %changed. I'm not able to note important differences.
 
