@@ -1,5 +1,6 @@
 %% importing multiples images in a 3D array
-%WARNING: images must be resized by a factor ~0.3
+%WARNING: images must be resized by a factor ~0.3 otherwise my Matlab
+%version cannot compute it
 
 % Specify the folder where the files live.
 myFolder = '/Users/simonepoli/Desktop/Corsi_ERASMUS/Personal student project/sample1';
@@ -42,6 +43,7 @@ clear i L;
 
 %% finding the peeks of the histogram to decide the number of threshold needed
 
+array3d = uint8(array3d);
 [val,pos] = imhist(array3d);
 
 for i = 1:50 %exclude the big peek before 50
@@ -51,9 +53,11 @@ end
 [posMax,valMax] = findpeaks(val,'MinPeakDist',10,'MinPeakWidth',5);
 numThresh = numel(posMax)-1;
 
-figure(1); plot(pos,val);
+% figure(1); plot(pos,val);
 
-%% Image processing (option 1) 
+% Image processing 
+
+% THRESHOLDING
 % in this case I use the function imbinarize() to binarize a 3D volume with
 % a given threshold. 
 
@@ -116,60 +120,139 @@ end
 
 BW = squeeze(BW);
 
-%% opening for 3D image
+%% opening e closing for 3D image
 
+%opening
 [x,y,z] = ndgrid(-5:5);
 
-r1 = 2;
-r2 = 3;
+r1 = 3;
 
 sphere = sqrt(x.^2 + y.^2 + z.^2) <= r1;
-BWerosion = imerode(BW,sphere);          %erosion with sphere radius = r1
+BWopening = imerode(BW,sphere);          %erosion with sphere radius = r1
 
-sphere = sqrt(x.^2 + y.^2 + z.^2) <= r2;
-BWopening = imdilate(BWerosion,sphere);  %dilation with sphere radius = r2
+sphere = sqrt(x.^2 + y.^2 + z.^2) <= r1;
+BWopening = imdilate(BWopening,sphere);  %dilation with sphere radius = r1
 
-figure(1); imshowpair(BW(:,:,4),BWopening(:,:,4), 'montage'); title('opening effect'); %show the effect of opening to a single image.
+% figure(1); imshowpair(BW(:,:,4),BWopening(:,:,4), 'montage'); title('opening effect'); %show the effect of opening to a single image.
 
 % to visualize on the entire volume use: 
 % volumeViewer(BWopening)
 
-%% bwconncomp() regionprops()
-
-cc = bwconncomp(BWopening); 
-stats = regionprops3(cc, 'Volume'); 
-idx = find( [stats.Volume] == max([stats.Volume]) ); 
-BW2 = ismember(labelmatrix(cc), idx);  
-
-% to visualize on the entire volume use: 
-% volumeViewer(BW2)
-
-
-%% closing for 3D image
+% closing
 [x,y,z] = ndgrid(-5:5);
 
 r1 = 3;
-r2 = 3;
 
 sphere = sqrt(x.^2 + y.^2 + z.^2) <= r1;
-BWdilate = imdilate(BW2,sphere);  %dilation with sphere radius = r2
+BWclosing = imdilate(BWopening,sphere);  %dilation with sphere radius = r1
 
-sphere = sqrt(x.^2 + y.^2 + z.^2) <= r2;
-BWclosing = imerode(BWdilate,sphere);          %erosion with sphere radius = r1
+sphere = sqrt(x.^2 + y.^2 + z.^2) <= r1;
+BWclosing = imerode(BWclosing,sphere);          %erosion with sphere radius = r1
 
-figure(2); imshowpair(BWopening(:,:,4),BWclosing(:,:,4), 'montage'); title('opening effect'); 
+%figure(2); imshowpair(BW(:,:,4),BWclosing(:,:,4), 'montage'); title('opening effect'); 
 %show the effect of closing after opening in a single image.
 
 % to visualize on the entire volume use: 
 % volumeViewer(BWclosing)
 
+%% bwconncomp() regionprops()
+
+cc = bwconncomp(BWclosing);  
+stats = regionprops3(cc, 'Volume'); 
+idx = find( [stats.Volume] == max([stats.Volume]) ); 
+BWconn = ismember(labelmatrix(cc), idx);  
+
+% to visualize on the entire volume use: 
+% volumeViewer(BW2)
+
 %% subplot
 
+figure(1);
 subplot(2,3,1); imshow(array3d(:,:,5)); title('original_image');
 subplot(2,3,2); imshow(BW(:,:,5)); title('binarization with automatic threshold');
 subplot(2,3,3); imshow(BWopening(:,:,5)); title('opening');
-subplot(2,3,4); imshow(BW2(:,:,5)); title('bwconncomp() and regionprops()');
+subplot(2,3,4); imshow(BWconn(:,:,5)); title('bwconncomp() and regionprops()');
 subplot(2,3,5); imshow(BWclosing(:,:,5)); title('closing');
+
+BW = BWconn;
+
+figure(2);
+imshowpair(array3d(:,:,5),BW(:,:,5))
+
+clearvars -except array3d BW;
+
+%% second part of the project (after meeting 5/03)
+
+
+BWmasked = zeros(size(array3d,1),size(array3d,2),size(array3d,3)); %preallocate the sike of the masked image
+
+BW1 = smooth3(BW,'gaussian',5); %smooth the 3D image in order to avoid holes in the surface of the image that could compromise
+%the use of the function imfill() in the for cycle. 
+
+for i = 1:size(array3d,3)
+    
+% Load Mask
+mask = BW1(:,:,i);
+
+% Fill holes
+mask = imfill(mask, 'holes');
+
+% Create masked image.
+maskedImage = array3d(:,:,i);
+maskedImage(~mask) = 0;
+
+BWmasked(:,:,i) = maskedImage;
+
+end
+
+clearvars -except array3d BW BWmasked;
+
+%% apply thresholding tecnique again on the masked image
+%now the number of threshold is 2 (I have to separate: -bone marrow
+%                                                      -cortical+trabecular
+%                                                      -background
+
+
+BWmasked = uint8(BWmasked);
+
+thresh = multithresh(BWmasked,2);
+%thresh=double(thresh);
+
+T1 = thresh(1);
+T2 = thresh(2);
+
+bonemarrow = BWmasked >= T1 & BWmasked <= T2;
+
+%% opening and closing for the bonemarrow
+%opening
+[x,y,z] = ndgrid(-5:5);
+r1 = 3;
+
+sphere = sqrt(x.^2 + y.^2 + z.^2) <= r1;
+BWopening = imerode(bonemarrow,sphere);          %erosion with sphere radius = r1
+
+sphere = sqrt(x.^2 + y.^2 + z.^2) <= r1;
+BWopening = imdilate(BWopening,sphere);          %dilation with sphere radius = r1
+
+% closing
+[x,y,z] = ndgrid(-5:5);
+r1 = 3;
+
+sphere = sqrt(x.^2 + y.^2 + z.^2) <= r1;
+BWclosing = imdilate(BWopening,sphere);         %dilation with sphere radius = r1
+
+sphere = sqrt(x.^2 + y.^2 + z.^2) <= r1;
+BWclosing = imerode(BWclosing,sphere);          %erosion with sphere radius = r1
+
+
+
+
+
+
+
+
+
+
 
 
 
