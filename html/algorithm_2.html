@@ -1,0 +1,707 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>algorithm_2</title><meta name="generator" content="MATLAB 9.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-04-08"><meta name="DC.source" content="algorithm_2.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Import 3D image from the file with resized images</a></li><li><a href="#2">Image processing</a></li><li><a href="#3">BINARIZATION OF THE IMAGE</a></li><li><a href="#4">CLOSING and OPENING techniques</a></li><li><a href="#5">FINDING CONNECTED ELEMENTS</a></li><li><a href="#6">MORPHOLOGICAL OPERATIONS ON THE BACKGROUND</a></li><li><a href="#7">THRESHOLDING TECHIQUE TO SEPARATE BONE MARROW FROM CORTICAL AND TRABECULAR BONE.</a></li><li><a href="#8">IMAGE PROCESSING ON THE BONE MARROW IMAGE</a></li><li><a href="#9">TECHNIQUES TO ELIMINARE TRABECULAR BONE FROM THE CORTICAL BONE</a></li></ul></div><h2 id="1">Import 3D image from the file with resized images</h2><pre class="codeinput"><span class="comment">% IMPORTFILE('SampleXX_resized03')</span>
+<span class="comment">% Imports data from the specified file</span>
+<span class="comment">% SampleXX_resized03: is the file to read</span>
+
+
+<span class="comment">% Import the file</span>
+newData1 = load(<span class="string">'-mat'</span>,<span class="string">'Sample37_resized03'</span>);
+
+<span class="comment">% Create new variables in the base workspace from those fields.</span>
+vars = fieldnames(newData1);
+<span class="keyword">for</span> i = 1:length(vars)
+    assignin(<span class="string">'base'</span>, vars{i}, newData1.(vars{i}));
+<span class="keyword">end</span>
+
+array3d = Ires;
+clearvars <span class="string">-except</span> <span class="string">array3d</span>;
+</pre><h2 id="2">Image processing</h2><pre class="codeinput"><span class="comment">%FINDING AUTOMATICALLY THE NUMBER OF PEEKS ON THE HISTOGRAM</span>
+
+array3d = uint8(array3d);
+[val,pos] = imhist(array3d);
+
+<span class="keyword">for</span> i = 1:5 <span class="comment">%exclude the outliers in before 5</span>
+    val(i) = 0;
+<span class="keyword">end</span>
+
+[~,id] = max(val);
+
+<span class="keyword">for</span> i = 1:(id+10) <span class="comment">%exclude the big peek before idx+50</span>
+    val(i) = 0;
+<span class="keyword">end</span>
+
+[valMax,posMax] = findpeaks(val,<span class="string">'MinPeakDist'</span>,10,<span class="string">'MinPeakWidth'</span>,5);
+numThresh = numel(posMax)-1;
+
+<span class="comment">% if this automatic step is not working (for example with images where</span>
+<span class="comment">% cortical bone and bone marrow have very similar contrast) the operator</span>
+<span class="comment">% will be able to decide manually the number of threshold he desire.</span>
+
+figure(1); plot(pos,val);
+</pre><img vspace="5" hspace="5" src="algorithm_2_01.png" alt=""> <h2 id="3">BINARIZATION OF THE IMAGE</h2><p>Image processing to obtain a binarized image</p><pre class="codeinput">var = <span class="string">'N'</span>;
+
+<span class="keyword">while</span> (var == <span class="string">'N'</span>)
+
+    <span class="comment">% THRESHOLDING</span>
+
+    thresh = multithresh(array3d,numThresh);
+    thresh = double(thresh);
+
+    T = thresh(numThresh)/255;
+
+    BW = imbinarize(array3d,T);
+
+    <span class="comment">%CONTROL</span>
+
+    <span class="comment">%showing the image obtained with thresholding technique (the operator can</span>
+    <span class="comment">%decide if the binary image is good or not.</span>
+    figure(1); imshow(BW(:,:,5)); title(<span class="string">'binary image obtained with thresholding technique'</span>);
+
+    <span class="comment">% asking to the operator if the binarization has been successful</span>
+    fprintf(<span class="string">'Has the binarization of the image been successfull? [Y/N]\n'</span>);
+    <span class="comment">% var = input('','s');</span>
+    var = <span class="string">'Y'</span>; <span class="comment">% I putted var = 'Y' only to publish the code</span>
+
+    <span class="comment">%if the binarization had some problems, the operator can insert manually the</span>
+    <span class="comment">%number of threshold desired</span>
+    <span class="keyword">if</span> (var == <span class="string">'N'</span>)
+
+        fprintf(<span class="string">'Insert manually the number of the thresholds desired:\n'</span>);
+        numThresh = input(<span class="string">''</span>);
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+close <span class="string">figure</span> <span class="string">1</span>;
+</pre><pre class="codeoutput">Has the binarization of the image been successfull? [Y/N]
+</pre><h2 id="4">CLOSING and OPENING techniques</h2><pre class="codeinput"><span class="comment">%Also in this case the algorithm first apply opening and closing with a</span>
+<span class="comment">%default radius r1 and r2. The operator can also decide to change this</span>
+<span class="comment">%values.</span>
+
+<span class="comment">%default values for r1 and r2</span>
+r1 = 3; <span class="comment">%default value for opening</span>
+r2 = 3; <span class="comment">%default value for closing</span>
+
+
+var = <span class="string">'N'</span>;
+<span class="keyword">while</span> (var == <span class="string">'N'</span>)
+
+    <span class="comment">% OPENING</span>
+
+    SEopening = strel(<span class="string">'disk'</span>,r1);
+    BWopening = imopen(BW,SEopening);
+
+    <span class="comment">% CLOSING</span>
+
+    SEclosing = strel(<span class="string">'disk'</span>,r2);
+    BWclosing = imclose(BWopening,SEclosing);
+
+    <span class="comment">% CONTROL</span>
+
+    <span class="comment">% Showing the image obtained with opening and closing technique (the operator can</span>
+    <span class="comment">% decide if the binary image is good or not)</span>
+    figure(2); imshow(BWclosing(:,:,5)); title(<span class="string">'binary image obtained with opening and closing technique'</span>);
+
+    <span class="comment">% asking to the operator if OPENING and CLOSING techniques have been successful</span>
+    fprintf(<span class="string">'Has the opening and closing technique been successfull? [Y/N]\n'</span>);
+      <span class="comment">% var = input('','s');</span>
+    var = <span class="string">'Y'</span>; <span class="comment">% I putted var = 'Y' only to publish the code</span>
+
+    <span class="comment">%if the opening and closing technique had some problems, the operator can insert manually the</span>
+    <span class="comment">%values for R1 and R2.</span>
+    <span class="keyword">if</span> (var == <span class="string">'N'</span>)
+
+         fprintf(<span class="string">'Insert manually the radius (R1) for the OPENING technique :\n'</span>);
+         r1 = input(<span class="string">''</span>);
+         fprintf(<span class="string">'Insert manually the radius (R2) for the CLOSING technique:\n'</span>);
+         r2 = input(<span class="string">''</span>);
+
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+close <span class="string">figure</span> <span class="string">2</span>;
+</pre><pre class="codeoutput">Has the opening and closing technique been successfull? [Y/N]
+</pre><h2 id="5">FINDING CONNECTED ELEMENTS</h2><p>using bwconncomp() regionprops() to chose the connected element with more pixels: this operation make the algorithm more robust.</p><pre class="codeinput">cc = bwconncomp(BWclosing);
+stats = regionprops3(cc, <span class="string">'Volume'</span>);
+idx = find( [stats.Volume] == max([stats.Volume]) );
+BWconn = ismember(labelmatrix(cc), idx);
+
+
+<span class="comment">% SUBPLOT</span>
+figure(2);
+subplot(2,3,1); imshow(array3d(:,:,5)); title(<span class="string">'original image'</span>);
+subplot(2,3,2); imshow(BW(:,:,5)); title(<span class="string">'binary image (BW)'</span>);
+subplot(2,3,3); imshow(BWopening(:,:,5)); title(<span class="string">'BW after opening'</span>);
+subplot(2,3,4); imshow(BWclosing(:,:,5)); title(<span class="string">'BW after closing'</span>);
+subplot(2,3,5); imshow(BWconn(:,:,5)); title(<span class="string">'BW after finding connected elements '</span>);
+
+figure(3);
+imshowpair(array3d(:,:,5),BWconn(:,:,5))
+
+BW = BWconn; <span class="comment">% binary image</span>
+
+<span class="comment">% cleaning variables</span>
+clearvars <span class="string">-except</span> <span class="string">array3d</span> <span class="string">BW</span>;
+
+
+<span class="comment">% FILLING THE INTERNAL VOLUME OF THE BONE</span>
+
+<span class="comment">% FIlling the internal volume of the bone is an useful operation for the next steps:</span>
+<span class="comment">% in fact if I overlap the original image with the binary image with all the holes filled,</span>
+<span class="comment">% I can obtain an image with an uniform background (black) and the bone in different</span>
+<span class="comment">% shapes of gray.</span>
+
+BWfill = zeros(size(array3d,1),size(array3d,2),size(array3d,3));
+<span class="comment">%preallocating the size of the masked image</span>
+
+<span class="keyword">for</span> i = 1:size(array3d,3)
+
+<span class="comment">% Load Mask</span>
+mask = BW(:,:,i);
+
+<span class="comment">% Fill holes</span>
+mask = imfill(mask, <span class="string">'holes'</span>);
+
+BWfill(:,:,i) = mask;
+
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="algorithm_2_02.png" alt=""> <img vspace="5" hspace="5" src="algorithm_2_03.png" alt=""> <h2 id="6">MORPHOLOGICAL OPERATIONS ON THE BACKGROUND</h2><p>To make the algorithm much more robust, we need to do some morphological operations also on the background of the image. In this way, I can avoid the problems I have when the external boundaries of the image have holes or are not continuous.</p><pre class="codeinput">background = ~BWfill; <span class="comment">%inverting the binary image</span>
+
+<span class="comment">%OPENING (on the background)</span>
+
+r = 7;
+SEopening = strel(<span class="string">'disk'</span>,r);
+BWopening = imopen(background,SEopening);
+
+<span class="comment">%CONNECTED ELEMENTS (on the background)</span>
+
+cc = bwconncomp(BWopening);
+stats = regionprops3(cc, <span class="string">'Volume'</span>);
+idx = find( [stats.Volume] == max([stats.Volume]) );
+BWbackground = ismember(labelmatrix(cc), idx);
+
+BWmasked = ~BWbackground; <span class="comment">%inverting again the image to obtain the original one</span>
+
+
+<span class="comment">% overlapping the mask obtained before on the original image</span>
+BWfinal = zeros(size(array3d,1),size(array3d,2),size(array3d,3)); <span class="comment">%preallocate the size of the masked image</span>
+
+<span class="keyword">for</span> i = 1:size(array3d,3)
+
+<span class="comment">% Load Mask</span>
+mask = BWmasked(:,:,i);
+
+<span class="comment">% Create masked image.</span>
+maskedImage = array3d(:,:,i);
+maskedImage(~mask) = 0;
+
+BWfinal(:,:,i) = maskedImage;
+
+<span class="keyword">end</span>
+</pre><h2 id="7">THRESHOLDING TECHIQUE TO SEPARATE BONE MARROW FROM CORTICAL AND TRABECULAR BONE.</h2><p>applying thresholding tecnique again on the masked image to separate bone marrow from the cortical and trabecular bone. now the number of threshold is 2 (fixed): I have to separate: -bone marrow                                                               -cortical+trabecular                                                               -background</p><pre class="codeinput">BWfinal = uint8(BWfinal);
+thresh = multithresh(BWfinal,2);
+<span class="comment">%thresh=double(thresh);</span>
+
+T1 = thresh(1);
+T2 = thresh(2);
+
+BWbm = BWfinal &gt;= T1 &amp; BWfinal &lt;= T2;
+</pre><h2 id="8">IMAGE PROCESSING ON THE BONE MARROW IMAGE</h2><pre class="codeinput">r1 = 3;
+r2 = 3;
+
+<span class="comment">% OPENING</span>
+
+SEopening = strel(<span class="string">'disk'</span>,r1);
+BWopening = imopen(BWbm,SEopening);
+
+<span class="comment">% CLOSING</span>
+
+SEclosing = strel(<span class="string">'disk'</span>,r2);
+BWclosing = imclose(BWopening,SEclosing);
+
+<span class="comment">%CONNECTED ELEMENTS</span>
+<span class="comment">% using bwconncomp() regionprops() to chose the connected element with more pixels</span>
+
+cc = bwconncomp(BWclosing);
+stats = regionprops3(cc, <span class="string">'Volume'</span>);
+idx = find( [stats.Volume] == max([stats.Volume]) );
+BWconn = ismember(labelmatrix(cc), idx);
+
+BWbm=BWconn;
+
+clearvars <span class="string">-except</span> <span class="string">array3d</span> <span class="string">BW</span> <span class="string">BWfinal</span> <span class="string">BWbm</span> <span class="string">BWbackground</span>;
+
+
+figure(4);
+subplot(2,2,1); imshow(array3d(:,:,5)); title(<span class="string">'Original image'</span>);
+subplot(2,2,2); imshow(BW(:,:,5)); title(<span class="string">'BW image (cortical and trabecular bone)'</span>);
+subplot(2,2,3); imshow(BWfinal(:,:,5)); title(<span class="string">'Original overlapped with the mask'</span>);
+subplot(2,2,4); imshow(BWbm(:,:,5)); title(<span class="string">'BW image of the bone marrow'</span>);
+figure(5);
+imshowpair(BW(:,:,5),BWbm(:,:,5));
+</pre><img vspace="5" hspace="5" src="algorithm_2_04.png" alt=""> <img vspace="5" hspace="5" src="algorithm_2_05.png" alt=""> <h2 id="9">TECHNIQUES TO ELIMINARE TRABECULAR BONE FROM THE CORTICAL BONE</h2><p>there are mainly 3 ways to compute the convexHull of a 3D volume in matlab: -convhulln         -convexHull         -Alphashape Convhull is said to be the most robut and efficient way to do that (https://it.mathworks.com/help/matlab/math/computing-the-convex-hull.html)</p><pre class="codeinput"><span class="comment">%first of all I need trasform with the function ind2sub() the 3D</span>
+<span class="comment">%matrix BWbm into 3 vectors x,y,z.</span>
+
+[x,y,z] = ind2sub(size(BWbm),find(BWbm == 1));  <span class="comment">% trasform the 3D matrix in 3 vectors</span>
+z = double(z);
+
+<span class="comment">%I do the same for the initial binary image</span>
+[xBW,yBW,zBW] = ind2sub(size(BW),find(BW == 1));  <span class="comment">% trasform the 3D matrix in 3 vectors</span>
+zBW = double(zBW);
+
+<span class="comment">% % TECNIQUE 1 - Convhull</span>
+<span class="comment">%</span>
+<span class="comment">% K = convhull(x,y,z);</span>
+<span class="comment">% figure(5); trisurf(K,x,y,z);</span>
+<span class="comment">%</span>
+<span class="comment">% TECNIQUE 2 - ConvexHull</span>
+
+DT = delaunayTriangulation(x,y,z);
+[Hull,v] = convexHull(DT);
+figure(5); trisurf(Hull,DT.Points(:,1),DT.Points(:,2),DT.Points(:,3));
+
+<span class="comment">% I can now compute the visualization of the volume with the function</span>
+<span class="comment">% trisurf.</span>
+
+
+<span class="comment">% TECNIQUE 3 - AlphaShape</span>
+
+<span class="comment">%With the 3 vectors obtained before I can applay alpha-shape that creates a bounding</span>
+<span class="comment">%volume that envelops the set of 3-D points.</span>
+
+
+shp = alphaShape(x,y,z,10); <span class="comment">%obtaining alphaShape image</span>
+figure(6); Ishp = plot(shp); <span class="comment">%plotting the image to show what obtained. Ishp is a struct type.</span>
+
+shpPatch = patch2struct(Ishp); <span class="comment">%Converting Ishp (patch) into a struct that can be computed by polygon2voxel</span>
+
+VolumeSize = [size(BW,1) size(BW,2) size(BW,3)];
+Volume=polygon2voxel(shpPatch,VolumeSize,<span class="string">'none'</span>); <span class="comment">%creating a 3D array of the AlphaShape image</span>
+
+<span class="comment">% polygon2voxel create the boundaries around alphaShape image: to obtain</span>
+<span class="comment">% the final volume I need to fill these boundaries</span>
+BWfill = zeros(size(BW,1),size(BW,2),size(BW,3));
+<span class="keyword">for</span> i = 1:size(BW,3)
+
+<span class="comment">% Load Mask</span>
+mask = Volume(:,:,i);
+
+<span class="comment">% Fill holes inside th</span>
+BWfill(:,:,i) = imfill(mask, <span class="string">'holes'</span>);
+
+<span class="keyword">end</span>
+
+<span class="comment">% subplot of the AlphaShape overlapped on the original image</span>
+figure(7); title(<span class="string">'AlphaShape overlapped on the original image'</span>);
+h = plot(shp);
+hold <span class="string">on</span>
+h2 = plot3(xBW, yBW, zBW);
+hold <span class="string">off</span>
+</pre><img vspace="5" hspace="5" src="algorithm_2_06.png" alt=""> <img vspace="5" hspace="5" src="algorithm_2_07.png" alt=""> <img vspace="5" hspace="5" src="algorithm_2_08.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Import 3D image from the file with resized images 
+
+% IMPORTFILE('SampleXX_resized03')
+% Imports data from the specified file
+% SampleXX_resized03: is the file to read
+
+
+% Import the file
+newData1 = load('-mat','Sample37_resized03');
+
+% Create new variables in the base workspace from those fields.
+vars = fieldnames(newData1);
+for i = 1:length(vars)
+    assignin('base', vars{i}, newData1.(vars{i}));
+end
+
+array3d = Ires;
+clearvars -except array3d;
+
+%% Image processing
+
+%FINDING AUTOMATICALLY THE NUMBER OF PEEKS ON THE HISTOGRAM
+
+array3d = uint8(array3d);
+[val,pos] = imhist(array3d);
+
+for i = 1:5 %exclude the outliers in before 5
+    val(i) = 0;
+end
+
+[~,id] = max(val);
+
+for i = 1:(id+10) %exclude the big peek before idx+50
+    val(i) = 0;
+end
+
+[valMax,posMax] = findpeaks(val,'MinPeakDist',10,'MinPeakWidth',5);
+numThresh = numel(posMax)-1;
+
+% if this automatic step is not working (for example with images where
+% cortical bone and bone marrow have very similar contrast) the operator
+% will be able to decide manually the number of threshold he desire.
+
+figure(1); plot(pos,val);
+
+%% BINARIZATION OF THE IMAGE
+% Image processing to obtain a binarized image
+ 
+var = 'N';
+ 
+while (var == 'N')
+    
+    % THRESHOLDING
+
+    thresh = multithresh(array3d,numThresh);
+    thresh = double(thresh);
+
+    T = thresh(numThresh)/255;
+
+    BW = imbinarize(array3d,T);
+    
+    %CONTROL
+    
+    %showing the image obtained with thresholding technique (the operator can
+    %decide if the binary image is good or not.
+    figure(1); imshow(BW(:,:,5)); title('binary image obtained with thresholding technique');
+
+    % asking to the operator if the binarization has been successful
+    fprintf('Has the binarization of the image been successfull? [Y/N]\n');
+    % var = input('','s');
+    var = 'Y'; % I putted var = 'Y' only to publish the code
+
+    %if the binarization had some problems, the operator can insert manually the
+    %number of threshold desired
+    if (var == 'N')
+
+        fprintf('Insert manually the number of the thresholds desired:\n');
+        numThresh = input('');
+    end
+end
+close figure 1;
+%% CLOSING and OPENING techniques
+%Also in this case the algorithm first apply opening and closing with a
+%default radius r1 and r2. The operator can also decide to change this
+%values.
+
+%default values for r1 and r2
+r1 = 3; %default value for opening
+r2 = 3; %default value for closing
+
+
+var = 'N';
+while (var == 'N')
+
+    % OPENING
+    
+    SEopening = strel('disk',r1);
+    BWopening = imopen(BW,SEopening); 
+    
+    % CLOSING
+    
+    SEclosing = strel('disk',r2);
+    BWclosing = imclose(BWopening,SEclosing);       
+    
+    % CONTROL
+    
+    % Showing the image obtained with opening and closing technique (the operator can
+    % decide if the binary image is good or not)
+    figure(2); imshow(BWclosing(:,:,5)); title('binary image obtained with opening and closing technique');
+
+    % asking to the operator if OPENING and CLOSING techniques have been successful
+    fprintf('Has the opening and closing technique been successfull? [Y/N]\n');
+      % var = input('','s');
+    var = 'Y'; % I putted var = 'Y' only to publish the code
+
+    %if the opening and closing technique had some problems, the operator can insert manually the
+    %values for R1 and R2.
+    if (var == 'N')
+        
+         fprintf('Insert manually the radius (R1) for the OPENING technique :\n');
+         r1 = input('');
+         fprintf('Insert manually the radius (R2) for the CLOSING technique:\n');
+         r2 = input('');
+         
+    end
+end
+
+close figure 2;
+%% FINDING CONNECTED ELEMENTS
+% using bwconncomp() regionprops() to chose the connected element with more
+% pixels: this operation make the algorithm more robust.
+
+cc = bwconncomp(BWclosing);  
+stats = regionprops3(cc, 'Volume'); 
+idx = find( [stats.Volume] == max([stats.Volume]) ); 
+BWconn = ismember(labelmatrix(cc), idx);  
+
+
+% SUBPLOT
+figure(2);
+subplot(2,3,1); imshow(array3d(:,:,5)); title('original image');
+subplot(2,3,2); imshow(BW(:,:,5)); title('binary image (BW)');
+subplot(2,3,3); imshow(BWopening(:,:,5)); title('BW after opening');
+subplot(2,3,4); imshow(BWclosing(:,:,5)); title('BW after closing');
+subplot(2,3,5); imshow(BWconn(:,:,5)); title('BW after finding connected elements ');
+ 
+figure(3);
+imshowpair(array3d(:,:,5),BWconn(:,:,5))
+
+BW = BWconn; % binary image
+
+% cleaning variables
+clearvars -except array3d BW;
+
+
+% FILLING THE INTERNAL VOLUME OF THE BONE
+
+% FIlling the internal volume of the bone is an useful operation for the next steps: 
+% in fact if I overlap the original image with the binary image with all the holes filled,
+% I can obtain an image with an uniform background (black) and the bone in different 
+% shapes of gray.
+
+BWfill = zeros(size(array3d,1),size(array3d,2),size(array3d,3)); 
+%preallocating the size of the masked image
+
+for i = 1:size(array3d,3)
+    
+% Load Mask
+mask = BW(:,:,i);
+
+% Fill holes
+mask = imfill(mask, 'holes');
+
+BWfill(:,:,i) = mask;
+
+end
+
+
+%% MORPHOLOGICAL OPERATIONS ON THE BACKGROUND
+% To make the algorithm much more robust, we need to do some morphological
+% operations also on the background of the image.
+% In this way, I can avoid the problems I have when the external boundaries
+% of the image have holes or are not continuous.
+
+background = ~BWfill; %inverting the binary image
+
+%OPENING (on the background)
+
+r = 7;
+SEopening = strel('disk',r);
+BWopening = imopen(background,SEopening); 
+
+%CONNECTED ELEMENTS (on the background)
+
+cc = bwconncomp(BWopening);  
+stats = regionprops3(cc, 'Volume'); 
+idx = find( [stats.Volume] == max([stats.Volume]) ); 
+BWbackground = ismember(labelmatrix(cc), idx);  
+
+BWmasked = ~BWbackground; %inverting again the image to obtain the original one
+
+
+% overlapping the mask obtained before on the original image
+BWfinal = zeros(size(array3d,1),size(array3d,2),size(array3d,3)); %preallocate the size of the masked image
+
+for i = 1:size(array3d,3)
+    
+% Load Mask
+mask = BWmasked(:,:,i);
+
+% Create masked image.
+maskedImage = array3d(:,:,i);
+maskedImage(~mask) = 0;
+
+BWfinal(:,:,i) = maskedImage;
+
+end
+
+%% THRESHOLDING TECHIQUE TO SEPARATE BONE MARROW FROM CORTICAL AND TRABECULAR BONE.
+% applying thresholding tecnique again on the masked image to separate bone
+% marrow from the cortical and trabecular bone.
+% now the number of threshold is 2 (fixed): I have to separate: -bone marrow
+%                                                               -cortical+trabecular
+%                                                               -background
+
+BWfinal = uint8(BWfinal);
+thresh = multithresh(BWfinal,2);
+%thresh=double(thresh);
+
+T1 = thresh(1);
+T2 = thresh(2);
+
+BWbm = BWfinal >= T1 & BWfinal <= T2;
+
+
+%% IMAGE PROCESSING ON THE BONE MARROW IMAGE 
+
+r1 = 3;
+r2 = 3;
+
+% OPENING
+  
+SEopening = strel('disk',r1);
+BWopening = imopen(BWbm,SEopening); 
+    
+% CLOSING
+    
+SEclosing = strel('disk',r2);
+BWclosing = imclose(BWopening,SEclosing);       
+    
+%CONNECTED ELEMENTS
+% using bwconncomp() regionprops() to chose the connected element with more pixels
+
+cc = bwconncomp(BWclosing);  
+stats = regionprops3(cc, 'Volume'); 
+idx = find( [stats.Volume] == max([stats.Volume]) ); 
+BWconn = ismember(labelmatrix(cc), idx);  
+
+BWbm=BWconn;
+
+clearvars -except array3d BW BWfinal BWbm BWbackground;
+
+
+figure(4);
+subplot(2,2,1); imshow(array3d(:,:,5)); title('Original image');
+subplot(2,2,2); imshow(BW(:,:,5)); title('BW image (cortical and trabecular bone)');
+subplot(2,2,3); imshow(BWfinal(:,:,5)); title('Original overlapped with the mask');
+subplot(2,2,4); imshow(BWbm(:,:,5)); title('BW image of the bone marrow');
+figure(5);
+imshowpair(BW(:,:,5),BWbm(:,:,5));
+
+
+%% TECHNIQUES TO ELIMINARE TRABECULAR BONE FROM THE CORTICAL BONE
+% there are mainly 3 ways to compute the convexHull of a 3D volume in
+% matlab: -convhulln
+%         -convexHull
+%         -Alphashape
+% Convhull is said to be the most robut and efficient way to do that
+% (https://it.mathworks.com/help/matlab/math/computing-the-convex-hull.html)
+
+%first of all I need trasform with the function ind2sub() the 3D
+%matrix BWbm into 3 vectors x,y,z.
+
+[x,y,z] = ind2sub(size(BWbm),find(BWbm == 1));  % trasform the 3D matrix in 3 vectors
+z = double(z);
+
+%I do the same for the initial binary image
+[xBW,yBW,zBW] = ind2sub(size(BW),find(BW == 1));  % trasform the 3D matrix in 3 vectors
+zBW = double(zBW);
+
+% % TECNIQUE 1 - Convhull
+% 
+% K = convhull(x,y,z);
+% figure(5); trisurf(K,x,y,z);
+% 
+% TECNIQUE 2 - ConvexHull
+
+DT = delaunayTriangulation(x,y,z);
+[Hull,v] = convexHull(DT);
+figure(5); trisurf(Hull,DT.Points(:,1),DT.Points(:,2),DT.Points(:,3));
+
+% I can now compute the visualization of the volume with the function
+% trisurf.
+
+
+% TECNIQUE 3 - AlphaShape
+
+%With the 3 vectors obtained before I can applay alpha-shape that creates a bounding
+%volume that envelops the set of 3-D points.
+
+
+shp = alphaShape(x,y,z,10); %obtaining alphaShape image
+figure(6); Ishp = plot(shp); %plotting the image to show what obtained. Ishp is a struct type.
+
+shpPatch = patch2struct(Ishp); %Converting Ishp (patch) into a struct that can be computed by polygon2voxel
+
+VolumeSize = [size(BW,1) size(BW,2) size(BW,3)];
+Volume=polygon2voxel(shpPatch,VolumeSize,'none'); %creating a 3D array of the AlphaShape image
+
+% polygon2voxel create the boundaries around alphaShape image: to obtain
+% the final volume I need to fill these boundaries
+BWfill = zeros(size(BW,1),size(BW,2),size(BW,3));
+for i = 1:size(BW,3)
+    
+% Load Mask
+mask = Volume(:,:,i);
+
+% Fill holes inside th
+BWfill(:,:,i) = imfill(mask, 'holes');
+
+end
+
+% subplot of the AlphaShape overlapped on the original image
+figure(7); title('AlphaShape overlapped on the original image');
+h = plot(shp);
+hold on 
+h2 = plot3(xBW, yBW, zBW);
+hold off
+
+##### SOURCE END #####
+--></body></html>
